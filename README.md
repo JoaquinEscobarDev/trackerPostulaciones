@@ -1,58 +1,109 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Tracker de Postulaciones
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Herramienta personal para ordenar postulaciones laborales: vista Kanban con
+drag & drop, recordatorios automáticos de seguimiento y exportación a
+CSV/PDF. Hecha con Laravel + Livewire, corriendo 100% en Docker (Laravel
+Sail) para tener un entorno de desarrollo reproducible, igual al de un
+equipo real.
 
-## About Laravel
+## Stack
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Laravel 13** (PHP 8.5)
+- **Livewire 3** (+ Volt para las páginas de auth de Breeze) — interactividad
+  sin escribir una SPA aparte
+- **Laravel Breeze** — auth (login, registro, recuperación de contraseña)
+- **MySQL 8.4**, **Redis** y **Mailpit** vía Docker Compose (Laravel Sail)
+- **Tailwind CSS**
+- **SortableJS** (+ Alpine.js) para el drag & drop del Kanban
+- **barryvdh/laravel-dompdf** para exportar a PDF
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Por qué estas decisiones
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **Livewire para el Kanban, no Alpine puro**: el estado (qué postulación
+  está en qué columna) vive en el servidor y hay que persistirlo en la BD
+  en cada movimiento. Livewire maneja ese round-trip y el re-render sin
+  escribir una API REST aparte. Alpine se usa igual, pero solo para el
+  detalle de UI que no necesita servidor: inicializar SortableJS y togglear
+  el modal.
+- **Jobs en vez de enviar el email directo desde el comando**: el comando
+  Artisan solo decide *qué* postulaciones necesitan recordatorio y encola
+  un job por cada una. El envío real (que depende de una red externa, SMTP)
+  queda en un `Job` que corre en el worker de colas, con reintentos
+  automáticos si falla, sin bloquear al comando ni al scheduler.
+- **`recordatorio_enviado_en` en vez de reusar `updated_at`**: si solo
+  mirara `updated_at`, el recordatorio se reenviaría todos los días una vez
+  que la postulación quedara "vieja". Se guarda cuándo se mandó el último
+  recordatorio y se compara contra `updated_at`: si el usuario edita la
+  postulación después de eso, `updated_at` vuelve a ser más reciente y el
+  recordatorio puede dispararse de nuevo más adelante.
+- **Policy en vez de chequear `user_id` a mano en cada controller/Livewire
+  component**: centraliza la regla "cada usuario solo ve/edita sus propias
+  postulaciones" en un solo lugar (`PostulacionPolicy`), reutilizable desde
+  el Kanban, el form y el job.
 
-## Learning Laravel
+## Requisitos
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Solo [Docker Desktop](https://www.docker.com/products/docker-desktop/). No
+hace falta tener PHP, Composer ni MySQL instalados en la máquina — todo
+corre en contenedores.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Setup
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone <repo>
+cd trackerPostulacion
+cp .env.example .env
+docker compose build
+docker compose up -d
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Después, adentro del contenedor de la app:
 
-## Contributing
+```bash
+./vendor/bin/sail composer install
+./vendor/bin/sail artisan key:generate
+./vendor/bin/sail artisan migrate --seed
+./vendor/bin/sail npm install
+./vendor/bin/sail npm run build
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+La app queda en **http://localhost**. Mailpit (para ver los emails que
+manda la app en desarrollo, incluidos los recordatorios) queda en
+**http://localhost:8025**.
 
-## Code of Conduct
+Usuario de prueba creado por el seeder: `test@example.com` / `password`.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Correr el scheduler y el worker de colas en desarrollo
 
-## Security Vulnerabilities
+Los recordatorios automáticos dependen de dos procesos corriendo en
+paralelo (además de `sail up`):
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+# Terminal 1: procesa los jobs encolados (envío de emails)
+./vendor/bin/sail artisan queue:work
 
-## License
+# Terminal 2: dispara las tareas programadas (revisa el reloj cada minuto)
+./vendor/bin/sail artisan schedule:work
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+`schedule:work` es el equivalente en desarrollo del cron de producción:
+simula que el cron llama a `schedule:run` cada minuto, así no hace falta
+configurar nada en el SO para probar el scheduler localmente.
+
+Para probar el recordatorio sin esperar al horario programado (todos los
+días 09:00), se puede correr el comando a mano:
+
+```bash
+./vendor/bin/sail artisan postulaciones:recordatorios
+```
+
+El umbral de días sin seguimiento es configurable con la variable de
+entorno `POSTULACIONES_DIAS_RECORDATORIO` (default: 7).
+
+## Comandos útiles
+
+```bash
+./vendor/bin/sail artisan test        # tests
+./vendor/bin/sail artisan tinker      # REPL
+./vendor/bin/sail npm run dev         # Vite en modo watch
+```

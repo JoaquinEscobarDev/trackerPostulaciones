@@ -29,6 +29,7 @@ class Postulacion extends Model
         return [
             'fecha_postulacion' => 'date',
             'estado' => EstadoPostulacion::class,
+            'recordatorio_enviado_en' => 'datetime',
         ];
     }
 
