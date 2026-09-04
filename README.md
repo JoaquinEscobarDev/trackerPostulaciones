@@ -107,3 +107,9 @@ entorno `POSTULACIONES_DIAS_RECORDATORIO` (default: 7).
 ./vendor/bin/sail artisan tinker      # REPL
 ./vendor/bin/sail npm run dev         # Vite en modo watch
 ```
+
+## Deploy
+
+Ver [DEPLOY.md](DEPLOY.md) para el paso a paso de deploy a hosting
+compartido (Hostinger u otro similar): sin Docker, con el scheduler y la
+cola de jobs reemplazados por Cron Jobs.
