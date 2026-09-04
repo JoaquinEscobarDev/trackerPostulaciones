@@ -1,4 +1,22 @@
-# Tracker de Postulaciones
+<div align="center">
+
+# 📋 Tracker de Postulaciones
+
+**Kanban de postulaciones laborales con recordatorios automáticos de seguimiento.**
+
+[![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel&logoColor=white)](https://laravel.com)
+[![PHP](https://img.shields.io/badge/PHP-%5E8.3-777BB4?logo=php&logoColor=white)](https://php.net)
+[![Livewire](https://img.shields.io/badge/Livewire-3-4E56A6?logo=livewire&logoColor=white)](https://livewire.laravel.com)
+[![MySQL](https://img.shields.io/badge/MySQL-8.4-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com)
+[![Docker](https://img.shields.io/badge/Docker-Sail-2496ED?logo=docker&logoColor=white)](https://laravel.com/docs/sail)
+[![Tests](https://img.shields.io/badge/tests-33%20passing-30C755?logo=pest&logoColor=white)](#comandos-útiles)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+[🔗 Demo en vivo](https://trackerpostulaciones.com) · [Setup](#setup) · [Por qué estas decisiones](#por-qué-estas-decisiones) · [Deploy](#deploy)
+
+</div>
+
+---
 
 Herramienta personal para ordenar postulaciones laborales: vista Kanban con
 drag & drop, recordatorios automáticos de seguimiento y exportación a
@@ -6,16 +24,28 @@ CSV/PDF. Hecha con Laravel + Livewire, corriendo 100% en Docker (Laravel
 Sail) para tener un entorno de desarrollo reproducible, igual al de un
 equipo real.
 
+## Funcionalidades
+
+- 🔐 **Auth completa** — registro, login, recuperación de contraseña (Laravel Breeze + Livewire/Volt)
+- 🗂️ **Kanban con drag & drop** — 4 columnas (Postulado, Entrevista, Oferta, Rechazado), arrastrar una tarjeta actualiza el estado en la base de datos al instante
+- ✏️ **CRUD completo** — crear, editar, ver detalle y eliminar postulaciones, todo desde un modal
+- 🔒 **Cada usuario ve solo lo suyo** — reforzado con una Policy, no solo con filtros en las consultas
+- 📧 **Recordatorios automáticos** — si una postulación queda "Postulado" sin novedades por más de N días (configurable), se encola un email de seguimiento
+- 📤 **Exportación** — historial completo a CSV y PDF
+- ✅ **33 tests** cubriendo auth, CRUD y los límites de autorización entre usuarios
+
 ## Stack
 
-- **Laravel 13** (PHP 8.5)
-- **Livewire 3** (+ Volt para las páginas de auth de Breeze) — interactividad
-  sin escribir una SPA aparte
-- **Laravel Breeze** — auth (login, registro, recuperación de contraseña)
-- **MySQL 8.4**, **Redis** y **Mailpit** vía Docker Compose (Laravel Sail)
-- **Tailwind CSS**
-- **SortableJS** (+ Alpine.js) para el drag & drop del Kanban
-- **barryvdh/laravel-dompdf** para exportar a PDF
+| | |
+|---|---|
+| **Backend** | Laravel 13 (PHP 8.3+) |
+| **Frontend interactivo** | Livewire 3 (+ Volt para las páginas de auth de Breeze) |
+| **Auth** | Laravel Breeze |
+| **Base de datos** | MySQL 8.4 |
+| **Entorno dev** | Docker Compose vía Laravel Sail (MySQL, Redis, Mailpit) |
+| **Estilos** | Tailwind CSS |
+| **Drag & drop** | SortableJS + Alpine.js |
+| **Export PDF** | barryvdh/laravel-dompdf |
 
 ## Por qué estas decisiones
 
@@ -50,8 +80,8 @@ corre en contenedores.
 ## Setup
 
 ```bash
-git clone <repo>
-cd trackerPostulacion
+git clone https://github.com/JoaquinEscobarDev/trackerPostulaciones.git
+cd trackerPostulaciones
 cp .env.example .env
 docker compose build
 docker compose up -d
@@ -110,6 +140,7 @@ entorno `POSTULACIONES_DIAS_RECORDATORIO` (default: 7).
 
 ## Deploy
 
-Ver [DEPLOY.md](DEPLOY.md) para el paso a paso de deploy a hosting
-compartido (Hostinger u otro similar): sin Docker, con el scheduler y la
-cola de jobs reemplazados por Cron Jobs.
+Corriendo en producción en [trackerpostulaciones.com](https://trackerpostulaciones.com),
+en un hosting compartido (sin Docker). Ver [DEPLOY.md](DEPLOY.md) para el
+paso a paso completo: document root, variables de entorno, y el scheduler
+más la cola de jobs reemplazados por Cron Jobs cada minuto.
