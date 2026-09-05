@@ -16,8 +16,8 @@
     </form>
 
     <p class="text-center text-xs text-gray-400 mt-2">
-        {{ __('Empleos reales vía la API pública de') }}
-        <a href="https://www.getonbrd.com" target="_blank" rel="noopener noreferrer" class="underline">Get on Board</a>
+        {{ __('Empleos reales de Chile, todos los rubros, vía') }}
+        <a href="https://www.opcionempleo.cl" target="_blank" rel="noopener noreferrer" class="underline">Careerjet</a>
     </p>
 
     <div class="mt-10 max-w-4xl mx-auto" wire:loading.class="opacity-50" wire:target="buscar,irAPagina">

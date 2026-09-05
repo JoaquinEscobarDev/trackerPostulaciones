@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'careerjet' => [
+        'key' => env('CAREERJET_API_KEY'),
+        'locale' => env('CAREERJET_LOCALE', 'es_CL'),
+    ],
+
 ];

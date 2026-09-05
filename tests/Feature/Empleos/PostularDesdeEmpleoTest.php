@@ -3,7 +3,7 @@
 namespace Tests\Feature\Empleos;
 
 use App\Models\User;
-use App\Services\BuscadorEmpleosGetOnBrd;
+use App\Services\BuscadorEmpleosCareerjet;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -46,34 +46,44 @@ class PostularDesdeEmpleoTest extends TestCase
         $response->assertSessionHasErrors('empresa');
     }
 
-    public function test_el_servicio_de_busqueda_mapea_la_respuesta_de_get_on_board(): void
+    public function test_el_servicio_de_busqueda_mapea_la_respuesta_de_careerjet(): void
     {
+        config(['services.careerjet.key' => 'fake-key']);
+
         Http::fake([
-            'www.getonbrd.com/*' => Http::response([
-                'data' => [[
-                    'id' => 'dev-acme',
-                    'type' => 'job',
-                    'links' => ['public_url' => 'https://www.getonbrd.com/jobs/dev-acme'],
-                    'attributes' => [
-                        'title' => 'Backend Developer',
-                        'remote' => true,
-                        'countries' => ['Remoto'],
-                        'min_salary' => 1000,
-                        'max_salary' => 2000,
-                        'published_at' => now()->timestamp,
-                        'company' => ['data' => ['attributes' => ['name' => 'Acme', 'logo' => null]]],
-                        'seniority' => ['data' => ['attributes' => ['name' => 'Junior']]],
-                    ],
+            'search.api.careerjet.net/*' => Http::response([
+                'type' => 'JOBS',
+                'hits' => 1,
+                'pages' => 1,
+                'jobs' => [[
+                    'title' => 'Backend Developer',
+                    'company' => 'Acme',
+                    'date' => now()->toRfc2822String(),
+                    'description' => 'Excerpt',
+                    'locations' => 'Santiago',
+                    'salary_min' => 1000,
+                    'salary_max' => 2000,
+                    'salary_currency_code' => 'CLP',
+                    'salary_type' => 'M',
+                    'url' => 'https://www.opcionempleo.cl/jobs/dev-acme',
                 ]],
-                'meta' => ['page' => 1, 'per_page' => 12, 'total_pages' => 1],
             ], 200),
         ]);
 
-        $resultado = app(BuscadorEmpleosGetOnBrd::class)->buscar('programador');
+        $resultado = app(BuscadorEmpleosCareerjet::class)->buscar('programador');
 
         $this->assertSame(1, $resultado['totalPaginas']);
         $this->assertSame('Acme', $resultado['empleos']->first()['empresa']);
         $this->assertSame('Backend Developer', $resultado['empleos']->first()['titulo']);
-        $this->assertSame('Junior', $resultado['empleos']->first()['seniority']);
+    }
+
+    public function test_sin_api_key_devuelve_una_lista_vacia(): void
+    {
+        config(['services.careerjet.key' => null]);
+
+        $resultado = app(BuscadorEmpleosCareerjet::class)->buscar('programador');
+
+        $this->assertSame(0, $resultado['totalPaginas']);
+        $this->assertTrue($resultado['empleos']->isEmpty());
     }
 }
