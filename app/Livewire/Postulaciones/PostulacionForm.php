@@ -67,6 +67,27 @@ class PostulacionForm extends Component
         $this->mostrar = true;
     }
 
+    /**
+     * Abre el formulario de creación precargado con datos de una vacante
+     * encontrada en el buscador de empleos (ver PostularDesdeEmpleoController).
+     */
+    #[On('abrir-formulario-postulacion-prefil')]
+    public function abrirConDatos(string $empresa, string $cargo, ?string $link_vacante = null): void
+    {
+        $this->authorize('create', Postulacion::class);
+        $this->resetValidation();
+
+        $this->postulacionId = null;
+        $this->empresa = $empresa;
+        $this->cargo = $cargo;
+        $this->fecha_postulacion = now()->format('Y-m-d');
+        $this->estado = EstadoPostulacion::Postulado->value;
+        $this->link_vacante = $link_vacante;
+        $this->notas = null;
+
+        $this->mostrar = true;
+    }
+
     public function guardar(): void
     {
         $datos = $this->validate();
