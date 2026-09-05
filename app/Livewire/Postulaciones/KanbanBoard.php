@@ -10,6 +10,17 @@ use Livewire\Component;
 
 class KanbanBoard extends Component
 {
+    /**
+     * Si venimos del buscador de empleos (ver PostularDesdeEmpleoController),
+     * abre el formulario de nueva postulación ya precargado con esos datos.
+     */
+    public function mount(): void
+    {
+        if ($empleo = session('empleo_prefill')) {
+            $this->dispatch('abrir-formulario-postulacion-prefil', ...$empleo);
+        }
+    }
+
     public function abrirFormularioCreacion(): void
     {
         $this->dispatch('abrir-formulario-postulacion', id: null);
