@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Empleos;
 
-use App\Services\BuscadorEmpleosGetOnBrd;
+use App\Services\BuscadorEmpleosCareerjet;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
@@ -32,7 +32,12 @@ class BuscadorEmpleos extends Component
         $totalPaginas = 0;
 
         if ($this->query !== '' && ($this->buscado || request()->has('q'))) {
-            $resultado = app(BuscadorEmpleosGetOnBrd::class)->buscar($this->query, $this->pagina);
+            $resultado = app(BuscadorEmpleosCareerjet::class)->buscar(
+                $this->query,
+                $this->pagina,
+                request()->ip(),
+                request()->userAgent(),
+            );
             $empleos = $resultado['empleos'];
             $totalPaginas = $resultado['totalPaginas'];
         }
